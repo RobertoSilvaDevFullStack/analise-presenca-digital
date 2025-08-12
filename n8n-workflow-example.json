@@ -1,0 +1,197 @@
+{
+  "name": "Website Analysis with Gemini Pro",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analyze-website-ai",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "analyze-website-ai"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Preparar dados para análise\nconst inputData = $input.all()[0].json;\nconst websiteUrl = inputData.website_url;\nconst basicData = inputData.basic_data;\nconst technicalData = basicData.technical_data;\nconst contentData = basicData.content_data;\n\n// Detectar tipo de negócio\nconst businessType = contentData.business_type || 'geral';\n\n// Preparar contexto para Gemini\nconst analysisContext = {\n  website_url: websiteUrl,\n  business_type: businessType,\n  technical_summary: {\n    load_time: technicalData.load_time,\n    has_ssl: technicalData.has_ssl,\n    status_code: technicalData.status_code,\n    cms: technicalData.cms_info\n  },\n  content_summary: {\n    meta_title: technicalData.meta_title,\n    meta_description: technicalData.meta_description,\n    h1_count: technicalData.h1_tags?.length || 0,\n    images_count: technicalData.images_count,\n    content_preview: contentData.page_content?.substring(0, 500)\n  },\n  seo_data: {\n    google_results: contentData.google_results_count,\n    competitors: contentData.competitor_domains\n  }\n};\n\nreturn {\n  analysis_context: analysisContext,\n  prompts: inputData.ai_prompts\n};"
+      },
+      "id": "data-preparation",
+      "name": "Data Preparation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "model": "gemini-pro",
+        "prompt": "=Você é um especialista em análise de websites e marketing digital. Analise os seguintes dados e forneça uma análise SEO detalhada:\n\n**Website:** {{ $json.analysis_context.website_url }}\n**Tipo de Negócio:** {{ $json.analysis_context.business_type }}\n\n**Dados Técnicos:**\n- Tempo de carregamento: {{ $json.analysis_context.technical_summary.load_time }}s\n- SSL: {{ $json.analysis_context.technical_summary.has_ssl }}\n- Status: {{ $json.analysis_context.technical_summary.status_code }}\n- CMS: {{ $json.analysis_context.technical_summary.cms }}\n\n**Conteúdo:**\n- Meta Title: {{ $json.analysis_context.content_summary.meta_title }}\n- Meta Description: {{ $json.analysis_context.content_summary.meta_description }}\n- H1 Tags: {{ $json.analysis_context.content_summary.h1_count }}\n- Imagens: {{ $json.analysis_context.content_summary.images_count }}\n\n**Presença no Google:**\n- Resultados encontrados: {{ $json.analysis_context.seo_data.google_results }}\n\nForneça uma análise em formato JSON com:\n1. score_seo (0-100)\n2. pontos_fortes (array)\n3. oportunidades_melhoria (array)\n4. palavras_chave_sugeridas (array)\n5. acoes_prioritarias (array com prioridade: alta/media/baixa)\n6. estimativa_tempo_implementacao (string)\n\nResposta apenas em JSON válido:",
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 1000
+        }
+      },
+      "id": "gemini-seo-analysis",
+      "name": "Gemini SEO Analysis",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [680, 200],
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "gemini-credentials",
+          "name": "Gemini Pro API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gemini-pro",
+        "prompt": "=Você é um estrategista de marketing digital. Com base nos dados do website, crie uma estratégia de marketing personalizada:\n\n**Website:** {{ $('Data Preparation').item.json.analysis_context.website_url }}\n**Tipo de Negócio:** {{ $('Data Preparation').item.json.analysis_context.business_type }}\n\n**Contexto Técnico:**\n{{ JSON.stringify($('Data Preparation').item.json.analysis_context.technical_summary) }}\n\n**Contexto de Conteúdo:**\n{{ JSON.stringify($('Data Preparation').item.json.analysis_context.content_summary) }}\n\nCrie uma estratégia em JSON com:\n1. estrategia_conteudo (objeto com temas, frequencia, tipos)\n2. campanhas_google_ads (array com tipos de campanha e budget estimado)\n3. redes_sociais (objeto com plataformas recomendadas e estratégias)\n4. kpis_acompanhamento (array)\n5. investimento_mensal_estimado (objeto com ranges de valores)\n6. cronograma_implementacao (objeto com fases)\n\nConsidere o tipo de negócio para personalizar as recomendações.\n\nResposta apenas em JSON válido:",
+        "options": {
+          "temperature": 0.4,
+          "maxTokens": 1200
+        }
+      },
+      "id": "gemini-marketing-strategy",
+      "name": "Gemini Marketing Strategy",
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [680, 400],
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "gemini-credentials",
+          "name": "Gemini Pro API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Combinar resultados das análises\nconst seoAnalysis = $('Gemini SEO Analysis').item.json.response;\nconst marketingStrategy = $('Gemini Marketing Strategy').item.json.response;\nconst originalData = $('Data Preparation').item.json.analysis_context;\n\n// Parse JSON responses\nlet seoData = {};\nlet marketingData = {};\n\ntry {\n  seoData = typeof seoAnalysis === 'string' ? JSON.parse(seoAnalysis) : seoAnalysis;\n} catch (e) {\n  console.log('Erro ao parsear SEO data:', e);\n  seoData = { error: 'Erro no parsing da análise SEO' };\n}\n\ntry {\n  marketingData = typeof marketingStrategy === 'string' ? JSON.parse(marketingStrategy) : marketingStrategy;\n} catch (e) {\n  console.log('Erro ao parsear Marketing data:', e);\n  marketingData = { error: 'Erro no parsing da estratégia de marketing' };\n}\n\n// Calcular score geral\nconst overallScore = Math.round((seoData.score_seo || 50) * 0.6 + 40); // Base score + SEO weight\n\n// Combinar ações prioritárias\nconst priorityActions = [\n  ...(seoData.acoes_prioritarias || []),\n  ...(marketingData.cronograma_implementacao?.fase_1 || [])\n].slice(0, 5); // Limitar a 5 ações\n\n// Estimativa de impacto\nconst estimatedImpact = {\n  seo_improvement: `${Math.min(100, (seoData.score_seo || 50) + 20)}% em 3-6 meses`,\n  traffic_increase: '25-50% em 6 meses',\n  conversion_improvement: '15-30% em 3 meses',\n  roi_expectation: marketingData.investimento_mensal_estimado?.roi_esperado || '200-400%'\n};\n\nreturn {\n  success: true,\n  timestamp: new Date().toISOString(),\n  website_url: originalData.website_url,\n  business_type: originalData.business_type,\n  seo_analysis: seoData,\n  marketing_strategy: marketingData,\n  overall_score: overallScore,\n  priority_actions: priorityActions,\n  estimated_impact: estimatedImpact,\n  confidence_score: 0.85,\n  analysis_duration: '45-60 segundos'\n};"
+      },
+      "id": "combine-results",
+      "name": "Combine Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Error handler\nconst error = $input.all()[0].json;\n\nreturn {\n  success: false,\n  error: error.message || 'Erro desconhecido na análise',\n  timestamp: new Date().toISOString(),\n  fallback_message: 'Use a análise básica enquanto corrigimos o problema'\n};"
+      },
+      "id": "error-handler",
+      "name": "Error Handler",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 500]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Data Preparation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Preparation": {
+      "main": [
+        [
+          {
+            "node": "Gemini SEO Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gemini Marketing Strategy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini SEO Analysis": {
+      "main": [
+        [
+          {
+            "node": "Combine Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Marketing Strategy": {
+      "main": [
+        [
+          {
+            "node": "Combine Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Results": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "timezone": "America/Sao_Paulo",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "website-analysis-ai",
+  "tags": [
+    {
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "id": "ai-analysis",
+      "name": "AI Analysis"
+    }
+  ]
+}

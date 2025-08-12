@@ -1,0 +1,107 @@
+# Docker Compose com integração n8n + Gemini Pro
+# Para usar: docker-compose -f docker-compose-with-n8n.yml up -d
+
+services:
+  backend:
+    build: ./backend
+    container_name: analise-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - N8N_WEBHOOK_URL=http://n8n:5678
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - selenium
+      - n8n
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: analise-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  selenium:
+    image: selenium/standalone-chrome:latest
+    container_name: selenium-chrome
+    ports:
+      - "4444:4444"
+    shm_size: 2gb
+    networks:
+      - app-network
+
+  # n8n para automação e integração com IA
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: n8n-analysis
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=${N8N_AUTH_USER:-admin}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_AUTH_PASSWORD:-admin123}
+      - WEBHOOK_URL=http://localhost:5678
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=production
+      - EXECUTIONS_PROCESS=main
+      - EXECUTIONS_MODE=regular
+      - N8N_LOG_LEVEL=info
+      # Gemini Pro API Key para workflows
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # Webhook secret para segurança
+      - WEBHOOK_SECRET=${N8N_WEBHOOK_SECRET}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n-workflows:/home/node/.n8n/workflows:ro
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Redis para cache (opcional, melhora performance)
+  redis:
+    image: redis:7-alpine
+    container_name: analysis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+volumes:
+  n8n_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+
+# Healthchecks para monitoramento
+# Adicione ao serviço backend:
+# healthcheck:
+#   test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+#   interval: 30s
+#   timeout: 10s
+#   retries: 3
+
+# Adicione ao serviço n8n:
+# healthcheck:
+#   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5678/healthz"]
+#   interval: 30s
+#   timeout: 10s
+#   retries: 3

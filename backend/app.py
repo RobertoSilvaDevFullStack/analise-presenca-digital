@@ -528,6 +528,26 @@ def gerar_relatorio_texto(analysis_data, website_url, instagram_url):
 def health():
     return jsonify({'status': 'ok', 'message': 'Servidor funcionando'})
 
+@app.route('/ai-status', methods=['GET'])
+def ai_status():
+    """Verifica status da integração IA"""
+    gemini_key = os.getenv('GEMINI_API_KEY')
+    n8n_secret = os.getenv('N8N_WEBHOOK_SECRET')
+    n8n_url = os.getenv('N8N_WEBHOOK_URL')
+    
+    status = {
+        'ai_configured': bool(gemini_key and gemini_key != 'your_gemini_api_key_here'),
+        'n8n_configured': bool(n8n_secret and n8n_url),
+        'gemini_key_set': bool(gemini_key),
+        'n8n_webhook_set': bool(n8n_secret),
+        'timestamp': datetime.now().isoformat()
+    }
+    
+    if status['ai_configured'] and status['n8n_configured']:
+        return jsonify({'status': 'ok', 'message': 'IA configurada', 'details': status})
+    else:
+        return jsonify({'status': 'warning', 'message': 'IA parcialmente configurada', 'details': status}), 200
+
 # Rotas para servir arquivos estáticos do frontend
 @app.route('/')
 def index():
