@@ -136,6 +136,31 @@ curl https://seu-projeto.vercel.app/api/ai-status
 
 ---
 
+## 📋 Limitações Conhecidas
+
+- **Selenium não funciona** em ambiente serverless (Vercel)
+- **Instagram scraping** desabilitado na versão Vercel
+- **Análise Google** pode ter limitações de rate limiting
+
+## 🔧 Arquivos de Dependências
+
+- **`requirements.txt`** - Para Streamlit Cloud (sem Flask/Selenium)
+- **`requirements-vercel.txt`** - Para Vercel (sem Selenium)
+
+## 🚨 Troubleshooting - Erro de Dependências
+
+Se você encontrar o erro:
+```
+❗️ installer returned a non-zero exit code
+❗️ Error during processing dependencies!
+```
+
+**Soluções:**
+1. **Streamlit:** Use apenas `requirements.txt` (já otimizado)
+2. **Vercel:** Use `requirements-vercel.txt` (configurado no vercel.json)
+3. **Reinicie o app** no painel do Streamlit Cloud
+4. **Verifique as versões** das dependências se o erro persistir
+
 ## 🔧 Troubleshooting
 
 ### ❌ Problemas Comuns

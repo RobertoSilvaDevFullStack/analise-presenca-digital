@@ -31,6 +31,6 @@
       "maxDuration": 30
     }
   },
-  "installCommand": "pip install -r requirements.txt",
+  "installCommand": "pip install -r requirements-vercel.txt",
   "buildCommand": "echo 'Build completed'"
 }

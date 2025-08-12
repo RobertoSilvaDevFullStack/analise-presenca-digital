@@ -3,10 +3,6 @@ import requests
 import json
 from datetime import datetime
 import os
-from dotenv import load_dotenv
-
-# Carregar variáveis de ambiente
-load_dotenv()
 
 # Configuração da página
 st.set_page_config(
