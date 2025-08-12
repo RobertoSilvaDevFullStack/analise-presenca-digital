@@ -155,11 +155,43 @@ Se você encontrar o erro:
 ❗️ Error during processing dependencies!
 ```
 
-**Soluções:**
-1. **Streamlit:** Use apenas `requirements.txt` (já otimizado)
-2. **Vercel:** Use `requirements-vercel.txt` (configurado no vercel.json)
-3. **Reinicie o app** no painel do Streamlit Cloud
-4. **Verifique as versões** das dependências se o erro persistir
+**Soluções Passo a Passo:**
+
+### 📊 **Para Streamlit Cloud:**
+1. **Verifique o requirements.txt** (deve conter apenas 3 linhas):
+   ```
+   streamlit
+   requests
+   beautifulsoup4
+   ```
+
+2. **No painel do Streamlit Cloud:**
+   - Vá em **Settings** → **General**
+   - Clique em **"Reboot app"**
+   - Se persistir, clique em **"Delete app"** e reimporte
+
+3. **Alternativa - Criar novo app:**
+   - Delete o app atual no Streamlit Cloud
+   - Faça novo deploy do repositório
+   - Use Python 3.9 ou 3.10
+
+### 🌐 **Para Vercel:**
+- Use `requirements-vercel.txt` (configurado automaticamente)
+- Deploy deve funcionar sem problemas
+
+### 🔄 **Se o erro persistir:**
+1. **Limpe o cache do Git:**
+   ```bash
+   git rm -r --cached .
+   git add .
+   git commit -m "Clear cache and fix dependencies"
+   git push
+   ```
+
+2. **Force push (último recurso):**
+   ```bash
+   git push --force-with-lease origin main
+   ```
 
 ## 🔧 Troubleshooting
 

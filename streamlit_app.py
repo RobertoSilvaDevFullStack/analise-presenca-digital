@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import json
 from datetime import datetime
-import os
 
 # Configuração da página
 st.set_page_config(
