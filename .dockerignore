@@ -1,0 +1,38 @@
+# Arquivos de desenvolvimento
+.vscode/
+.git/
+.gitignore
+*.md
+README.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Logs e temporários
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Teste e debug
+test_*.py
+debug_*.py
+teste_*.py
+diagnostic*.py
+
+# Relatórios gerados
+relatorio_*.txt
+*.backup
+
+# Node modules (se houver)
+node_modules/
+npm-debug.log*

@@ -1,0 +1,63 @@
+# Arquivos de desenvolvimento
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+.coverage
+.env.local
+.env.development
+
+# Docker
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Documentação
+*.md
+!README.md
+!DEPLOY_GUIDE.md
+
+# Scripts de desenvolvimento
+check_system.py
+quick_start.py
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary files
+tmp/
+temp/
+
+# Node modules (se houver)
+node_modules/
+
+# Python virtual environment
+venv/
+env/
+.venv/
+
+# Selenium (não funciona em serverless)
+selenium/
+webdriver/

@@ -1,0 +1,29 @@
+{
+  "name": "analise-presenca-digital",
+  "version": "1.0.0",
+  "description": "Análise de presença digital com IA",
+  "main": "api/index.py",
+  "scripts": {
+    "dev": "python api/index.py",
+    "start": "python api/index.py",
+    "streamlit": "streamlit run streamlit_app.py"
+  },
+  "keywords": [
+    "website-analysis",
+    "seo",
+    "digital-presence",
+    "ai",
+    "gemini",
+    "flask",
+    "streamlit"
+  ],
+  "author": "Análise de Presença Digital",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seu-usuario/analise-presenca-digital.git"
+  },
+  "engines": {
+    "node": ">=14.x"
+  }
+}
